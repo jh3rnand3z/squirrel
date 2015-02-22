@@ -63,7 +63,7 @@ class Colours(wx.Dialog):
         self.pnl7.SetBackgroundColour(wx.LIGHT_GREY)
         self.pnl8.SetBackgroundColour('plum')
 
-    def onClose(self, evt):
+    def onClose(self, event):
         """
             Destroy the taskbar icon and the frame
         """
@@ -79,9 +79,11 @@ class Colours(wx.Dialog):
 
 
 def main():
-    """"""
+    """
+        Squirrel Monkey
+    """
     app = wx.App(False)
-    Colours(None, -1, 'colours.py')
+    Colours(None, -1, 'Monkey Preferences')
     app.MainLoop()
 
 if __name__ == "__main__":

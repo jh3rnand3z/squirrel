@@ -45,7 +45,7 @@ class CustomTaskBarIcon(wx.TaskBarIcon):
         self.icon = wx.EmptyIcon()
         self.icon.CopyFromBitmap(bmp)
 
-        self.SetIcon(self.icon, "IO FUN: Squirrel monkey")
+        self.SetIcon(self.icon, "Squirrel monkey")
         
         # bind some events
         self.Bind(wx.EVT_MENU, self.OnTaskBarClose, id=self.TBMENU_CLOSE)
@@ -55,7 +55,7 @@ class CustomTaskBarIcon(wx.TaskBarIcon):
         self.Bind(wx.EVT_TASKBAR_LEFT_DOWN, self.OnTaskBarLeftClick)
         self.Bind(wx.EVT_TASKBAR_RIGHT_DOWN, self.OnTaskBarRightClick)
 
-    def CreatePopupMenu(self, evt=None):
+    def CreatePopupMenu(self, event=None):
         """
             This method is called by the base class when it need to popup
             the menu for the default EVT_RIGHT_DOWN event.
@@ -74,27 +74,27 @@ class CustomTaskBarIcon(wx.TaskBarIcon):
         menu.Append(self.TBMENU_CLOSE, "Exit")
         return menu
 
-    def OnTaskBarActivate(self, evt):
+    def OnTaskBarActivate(self, event):
         """
 
         """
         pass
  
-    def OnTaskBarClose(self, evt):
+    def OnTaskBarClose(self, event):
         """
             Destroy the taskbar icon and frame from the taskbar icon itself
         """
         logging.info('on taskbar close')
         self.frame.Close()
  
-    def OnTaskBarLeftClick(self, evt):
+    def OnTaskBarLeftClick(self, event):
         """
             Show the hidden squirrel
         """
         logging.info('on taskbar left click')
         print('on taskbar left click')
 
-    def OnTaskBarRightClick(self, evt):
+    def OnTaskBarRightClick(self, event):
         """
             Create the right-click menu
         """
@@ -105,14 +105,14 @@ class CustomTaskBarIcon(wx.TaskBarIcon):
         self.PopupMenu(menu)
         menu.Destroy()
 
-    def OnLaunchWebsite(self, evt):
+    def OnLaunchWebsite(self, event):
         """
             Launch Website
         """
         print('on launch website')
         webbrowser.open(io_fun_website)
 
-    def OnPreferences(self, evt):
+    def OnPreferences(self, event):
         """
             On Preferences
         """
@@ -120,7 +120,7 @@ class CustomTaskBarIcon(wx.TaskBarIcon):
         self.frame.Show()
         self.frame.Restore()
 
-    def OnHelpCenter(self, evt):
+    def OnHelpCenter(self, event):
         """
             Launch Help center
         """
