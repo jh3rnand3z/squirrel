@@ -14,74 +14,205 @@ __author__ = 'Jean Chassoul'
 import taskbar
 import wx
 
+import  wx.lib.mixins.listctrl  as  listmix
+
+from panels import panelOne, panelTwo, panelThree, panelFour, panelFive, panelSix
+
+import images
+
+
+def getNextImageID(count) :
+    '''
+        Some while loop yielding some shit out while counting
+    '''
+    imID = 0
+    while True :
+        yield imID
+        imID += 1
+
+
+class TestListCtrl( wx.ListCtrl, listmix.ListCtrlAutoWidthMixin ) :
+    
+    def __init__( self, parent, id=-1, pos=wx.DefaultPosition,
+                        size=wx.DefaultSize, style=0 ) :
+        
+        wx.ListCtrl.__init__( self, parent, id, pos, size, style )
+        
+        listmix.ListCtrlAutoWidthMixin.__init__( self )
+
+
+class TabPanel(wx.Panel, listmix.ColumnSorterMixin) :
+    '''
+        This will be the second notebook tab
+    '''
+
+    def __init__(self, parent) :
+        '''
+            TabPanel Constructor
+        '''
+        wx.Panel.__init__( self, parent=parent, id=wx.ID_ANY )
+        self.createAndLayout()
+
+    def createAndLayout( self ) :
+        '''
+            Create and Layout
+        '''
+        sizer = wx.BoxSizer( wx.VERTICAL )
+        self.list = TestListCtrl( self, wx.ID_ANY, style=wx.LC_REPORT
+                                        | wx.BORDER_NONE
+                                        | wx.LC_EDIT_LABELS
+                                        | wx.LC_SORT_ASCENDING )
+        sizer.Add( self.list, proportion=1, flag=wx.EXPAND )
+        self.populateList()
+        
+        # Now that the list exists we can init the other base class,
+        #   see [ wx/lib/mixins/listctrl.py ].
+        self.itemDataMap = musicdata
+        numCols = 5
+        listmix.ColumnSorterMixin.__init__( self, numCols )
+        
+        self.SetSizer( sizer )
+        self.Layout()
+
+    def populateList( self ) :
+        '''
+            Populate list
+        '''
+        self.list.InsertColumn( 0, 'Artist' )
+        self.list.InsertColumn( 1, 'Title', wx.LIST_FORMAT_RIGHT )
+        self.list.InsertColumn( 2, 'Genre' )
+        items = musicdata.items()
+
+        for key, data in items :
+            index = self.list.InsertStringItem( sys.maxint, data[ 0 ] )
+            self.list.SetStringItem( index, 1, data[ 1 ] )
+            self.list.SetStringItem( index, 2, data[ 2 ] )
+            self.list.SetItemData( index, key )
+
+        self.list.SetColumnWidth( 0, wx.LIST_AUTOSIZE )
+        self.list.SetColumnWidth( 1, wx.LIST_AUTOSIZE )
+        self.list.SetColumnWidth( 2, 100 )
+
+        # show how to select an item
+        self.list.SetItemState(5, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+
+        # show how to change the colour of a couple items
+        item = self.list.GetItem( 1 )
+        item.SetTextColour( wx.BLUE )
+        self.list.SetItem( item )
+        
+        item = self.list.GetItem( 4 )
+        item.SetTextColour( wx.RED )
+        self.list.SetItem( item )
+
+        self.currentItem = 0
+    
+    def GetListCtrl( self ) :
+        '''
+            Used by the ColumnSorterMixin, see wx/lib/mixins/listctrl.py
+        '''
+        return self.list
+
+
+class ToolbookDemo(wx.Toolbook) :
+    
+    def __init__(self, parent) :
+        '''
+            Toolbook Constructor
+        '''
+        wx.Toolbook.__init__(self, parent, wx.ID_ANY, style=wx.BK_DEFAULT)
+
+        # Make an image list using the LBXX images
+        il = wx.ImageList(32, 32)
+        for x in range(6):
+            imgObj = getattr(images, 'LB%02d' % (x+1))
+            bmp = imgObj.GetBitmap()
+            il.Add(bmp)
+
+        self.AssignImageList(il)
+        imageIdGenerator = getNextImageID(il.GetImageCount())
+
+        notebookPageList = [(panelOne.TabPanel(self), 'General'),
+                            (panelTwo.TabPanel(self), 'Account'),
+                            (panelThree.TabPanel(self), 'Applications'),
+                            (panelFive.TabPanel(self), 'Trash'),
+                            (panelSix.TabPanel(self), 'Import')]
+        imID = 0
+        for page, label in notebookPageList:
+            
+            self.AddPage(page, label, imageId=imageIdGenerator.next())
+            imID += 1
+
+        # An undocumented method in the official docs:
+        self.ChangeSelection(1)     # Select and view this notebook page.
+                                    # Creates no events - method SetSelection does.
+        
+        self.Bind(wx.EVT_TOOLBOOK_PAGE_CHANGING, self.OnPageChanging)
+        self.Bind(wx.EVT_TOOLBOOK_PAGE_CHANGED,  self.OnPageChanged)
+
+    def OnPageChanging(self, event) :
+        '''
+            On page changing
+        '''
+        old = event.GetOldSelection()
+        new = event.GetSelection()
+        sel = self.GetSelection()
+
+        print 'OnPageChanging{}: old: %d, new: %d, sel: %d' % (old, new, sel)
+        event.Skip()
+
+    def OnPageChanged( self, event ) :
+        '''
+            On page changed
+        '''
+        old = event.GetOldSelection()
+        new = event.GetSelection()
+        sel = self.GetSelection()
+        
+        print 'OnPageChanged{}: old: %d, new: %d, sel: %d' % (old, new, sel)
+        event.Skip()
+
 
 class Colours(wx.Dialog):
     def __init__(self, parent, id, title):
-        """
+        '''
             Constructor
-        """
-        wx.Dialog.__init__(self, parent, id, title, size=(300, 300))        
+        '''
+        wx.Dialog.__init__(self, parent, id, title, size=(416,420))        
         
         self.tbIcon = taskbar.CustomTaskBarIcon(self)
- 
+
+        panel = wx.Panel(self)
+
+        notebook = ToolbookDemo( panel )
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(notebook, proportion=1, flag=wx.ALL|wx.EXPAND, border=5)
+        panel.SetSizer(sizer)
+        self.Layout()
+
         self.Bind(wx.EVT_ICONIZE, self.onMinimize)
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        self.pnl1 = wx.Panel(self, -1)
-        self.pnl2 = wx.Panel(self, -1)
-        self.pnl3 = wx.Panel(self, -1)
-        self.pnl4 = wx.Panel(self, -1)
-        self.pnl5 = wx.Panel(self, -1)
-        self.pnl6 = wx.Panel(self, -1)
-        self.pnl7 = wx.Panel(self, -1)
-        self.pnl8 = wx.Panel(self, -1)
-
-        gs = wx.GridSizer(4,2,3,3)
-        gs.AddMany([ (self.pnl1, 0 ,wx.EXPAND),
-            (self.pnl2, 0, wx.EXPAND),
-            (self.pnl3, 0, wx.EXPAND),
-            (self.pnl4, 0, wx.EXPAND),
-            (self.pnl5, 0, wx.EXPAND),
-            (self.pnl6, 0, wx.EXPAND),
-            (self.pnl7, 0, wx.EXPAND),
-            (self.pnl8, 0, wx.EXPAND) ])
-
-        vbox.Add(gs, 1, wx.EXPAND | wx.TOP, 5)
-        self.SetSizer(vbox)
-        self.SetColors()
-        self.Centre()
-        self.Hide()
-
-    def SetColors(self):
-        self.pnl1.SetBackgroundColour(wx.BLACK)
-        self.pnl2.SetBackgroundColour(wx.Colour(139,105,20))
-        self.pnl3.SetBackgroundColour(wx.RED)
-        self.pnl4.SetBackgroundColour('#0000FF')
-        self.pnl5.SetBackgroundColour('sea green')
-        self.pnl6.SetBackgroundColour('midnight blue')
-        self.pnl7.SetBackgroundColour(wx.LIGHT_GREY)
-        self.pnl8.SetBackgroundColour('plum')
-
     def onClose(self, event):
-        """
+        '''
             Destroy the taskbar icon and the frame
-        """
+        '''
         self.tbIcon.RemoveIcon()
         self.tbIcon.Destroy()
         self.Destroy()
  
     def onMinimize(self, event):
-        """
+        '''
             When minimizing, hide the frame so it "minimizes to tray"
-        """
+        '''
         self.Hide()
 
 
 def main():
-    """
+    '''
         Squirrel Monkey
-    """
+    '''
     app = wx.App(False)
     Colours(None, -1, 'Monkey Preferences')
     app.MainLoop()

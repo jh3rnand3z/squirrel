@@ -13,6 +13,7 @@ __author__ = 'Jean Chassoul'
 
 import wx
 import webbrowser
+import subprocess
 import logging
 
 
@@ -31,6 +32,7 @@ class CustomTaskBarIcon(wx.TaskBarIcon):
     TBMENU_REMOVE = wx.NewId()
     TBMENU_PREFERENCES = wx.NewId()
     TBMENU_HELP = wx.NewId()
+    TBMENU_AUDIO = wx.NewId()
     TBMENU_CLOSE = wx.NewId()
 
     def __init__(self, frame):
@@ -52,6 +54,7 @@ class CustomTaskBarIcon(wx.TaskBarIcon):
         self.Bind(wx.EVT_MENU, self.OnLaunchWebsite, id=self.TBMENU_WEBSITE)
         self.Bind(wx.EVT_MENU, self.OnPreferences, id=self.TBMENU_PREFERENCES)
         self.Bind(wx.EVT_MENU, self.OnHelpCenter, id=self.TBMENU_HELP)
+        self.Bind(wx.EVT_MENU, self.OnAudioControl, id=self.TBMENU_AUDIO)
         self.Bind(wx.EVT_TASKBAR_LEFT_DOWN, self.OnTaskBarLeftClick)
         self.Bind(wx.EVT_TASKBAR_RIGHT_DOWN, self.OnTaskBarRightClick)
 
@@ -70,6 +73,7 @@ class CustomTaskBarIcon(wx.TaskBarIcon):
         menu.AppendSeparator()
         menu.Append(self.TBMENU_PREFERENCES, "Preferences")
         menu.Append(self.TBMENU_HELP, "Help")
+        menu.Append(self.TBMENU_AUDIO, "Audio Control")
         menu.AppendSeparator()
         menu.Append(self.TBMENU_CLOSE, "Exit")
         return menu
@@ -126,3 +130,7 @@ class CustomTaskBarIcon(wx.TaskBarIcon):
         """
         print('on help center')
         webbrowser.open(io_fun_help)
+
+    def OnAudioControl(self, event):
+        print('on audio control')
+        subprocess.Popen(['pavucontrol'])
